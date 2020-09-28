@@ -14,6 +14,29 @@ app.webSocket("chat") { req, client in
     client.onClose.whenComplete { _ in
         clientConnections.remove(client)
     }
+
+    client.onText { _, text in
+        do {
+            guard let data = text.data(using: .utf8) else {
+                return
+            }
+
+            let incomingMessage = try JSONDecoder().decode(SubmittedChatMessage.self, from: data)
+            let outgoingMessage = ReceivingChatMessage(message: incomingMessage.message)
+            let json = try JSONEncoder().encode(outgoingMessage)
+
+            guard let jsonString = String(data: json, encoding: .utf8) else {
+                return
+            }
+
+            for connection in clientConnections {
+                connection.send(jsonString)
+            }
+        }
+        catch {
+            print(error)
+        }
+    }
 }
 
 try app.run()
