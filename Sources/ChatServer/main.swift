@@ -9,6 +9,9 @@ defer {
 
 app.webSocket("chat") { req, client in
     print("Connected:", client)
+    client.onClose.whenComplete { _ in
+        print("Disconnected:", client)
+    }
 }
 
 try app.run()
