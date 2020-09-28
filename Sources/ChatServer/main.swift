@@ -7,11 +7,23 @@ defer {
     app.shutdown()
 }
 
+var clientConnections = Set<WebSocket>()
 app.webSocket("chat") { req, client in
-    print("Connected:", client)
+    clientConnections.insert(client)
+
     client.onClose.whenComplete { _ in
-        print("Disconnected:", client)
+        clientConnections.remove(client)
     }
 }
 
 try app.run()
+
+extension WebSocket: Hashable {
+    public static func == (lhs: WebSocket, rhs: WebSocket) -> Bool {
+        ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
+    }
+}
